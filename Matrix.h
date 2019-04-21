@@ -15,6 +15,7 @@ public:
 	int cols;
 	Matrix(int, int);
 	int** get_data_pointer();
+	Matrix sum_to(Matrix);
 	void full_in_matrix();
 	void  full_in_matrix(int cont);
 	void  full_in_matrix_rand();

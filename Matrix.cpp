@@ -74,3 +74,23 @@ void  Matrix::full_in_matrix(int cont ){
 		}
 	}
 }
+
+
+Matrix Matrix::sum_to(Matrix mat1){
+		
+	if(mat1.rows == this->rows && mat1.cols == this->cols){
+	 	Matrix a = Matrix(this->rows, this->cols);
+		for (int i = 0; i < cols; i++)
+			{
+				for (int j = 0; j < rows; j++)
+				{
+		 			a.data[j][i] = data[j][i]+mat1.data[j][i];
+				}
+			}
+		return a;
+	}
+	else{
+		std::cout << "ERROR 404: Dimensiones no adecuadas" << std::endl;
+		Matrix a = Matrix(0, 0);
+	return a;
+}

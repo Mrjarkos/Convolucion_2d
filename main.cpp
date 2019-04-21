@@ -4,12 +4,11 @@
 
 int main(int argc, char** argv) {
 
-    int hilos;
     clock_t t_ini1, t_ini2, t_fin;
     double secs;
 
     if(argc==1){
-       hilos = 1;
+       numThreads = 1;
     }else if(argc >2){
         printf("Demasiados argumentos\n");
         return 1;
@@ -18,7 +17,7 @@ int main(int argc, char** argv) {
             printf("Numero invalido de hilos\n");
             return 1;  
         }else{
-            hilos = std::stoi(argv[1]);
+            numThreads = std::stoi(argv[1]);
         }
     }
 
@@ -34,13 +33,13 @@ int main(int argc, char** argv) {
         Matrix Filtro = crear_matrix();
         Matrix Imagen = crear_matrix();
         t_ini2 = clock();
-        Matrix Resultado = convolucion(Imagen, Filtro);
+        Matrix Resultado = convolucion(Imagen, Filtro, numThreads);
         printf("\nImagen Convolucionada:\n");
         Resultado.print();
 
     }else{
 
-        int n = 10, m = 10;
+        int n = 10, m = 16;
         Matrix Filtro = Matrix(n, n);
         printf("\nFiltro:\n");
         Filtro.full_in_matrix_rand();
@@ -52,13 +51,13 @@ int main(int argc, char** argv) {
         Imagen.print();
 
         t_ini2 = clock();
-        Matrix Resultado = convolucion(Imagen, Filtro);
+        Matrix Resultado = convolucion(Imagen, Filtro, numThreads);
         printf("\nImagen Convolucionada:\n");
         Resultado.print();
     }
 
     t_fin = clock();
-    printf("\nEjecucion con %i hilos", hilos);
+    printf("\nEjecucion con %i hilos", numThreads);
     secs = (double)(t_fin - t_ini1) / CLOCKS_PER_SEC;
     printf("\nTotal Time Programm = %.16g milisegundos\n", secs * 1000.0);
     secs = (double)(t_fin - t_ini2) / CLOCKS_PER_SEC;
@@ -67,7 +66,7 @@ int main(int argc, char** argv) {
 }
 
 
-Matrix convolucion (Matrix imagen, Matrix filtro)
+Matrix convolucion (Matrix imagen, Matrix filtro, int numThreads)
 {   
     int mitad, i,j,m,n,mm,nn,ii,jj, acumulador;
 
@@ -84,16 +83,50 @@ Matrix convolucion (Matrix imagen, Matrix filtro)
             image[j][i] = imagen.get_value(j, i);
         }
     }                    
-
-    int result[imagen.cols][imagen.rows];     
-
+    
     Matrix result_matrix = Matrix(imagen.cols, imagen.rows);
 
     mitad = length(kernel) / 2;
 
-    for (i = 0; i < imagen.rows; ++i) // Filas
+
+    pthread_t threads[numThreads];
+    pthread_attr_t attr[numThreads];
+    Param_Threads data[numThreads];
+
+
+    for(int i=0; i<numThreads; i++){
+        data[i].imagen = imagen;
+        data[i].filtro = filtro;
+        data[i].resultado = result_matrix;
+        data[i].threads = numThreads;
+        data[i].offset = i;
+        data[i].mitad = mitad;
+        pthread_attr_init(&attr[i]);
+        pthread_create(&threads[i], &attr[i], Paralell_Proces, &data[i]);
+    }
+
+    for(int i=0; i<numThreads; i++){
+        pthread_join(threads[i], NULL);
+        result_matrix = data[i].resultado.sum_to(result_matrix);
+    }
+
+    return result_matrix;
+}
+
+void* Paralell_Proces(void *param){
+
+    int mitad, i,j,m,n,mm,nn,ii,jj, acumulador;
+    Matrix imagen = ((Param_Threads*)param)->imagen;
+    Matrix filtro =  ((Param_Threads*)param)->filtro;
+    Matrix resultado = ((Param_Threads*)param)->resultado;
+    int threads =  ((Param_Threads*)param)->threads;
+    int hilo = ((Param_Threads*)param)->offset;
+    int offset = imagen.rows/threads*hilo;
+    mitad = ((Param_Threads*)param)->mitad;
+
+    for (i = offset; i < imagen.rows/threads + offset ; ++i) // Filas
     {
-        for (j = 0; j < imagen.cols; ++j) // Columnas
+        for (j = offset; j < imagen.cols/threads + offset; ++j) // Columnas
         {
             acumulador = 0; // Variable acumuladora
             
@@ -108,23 +141,20 @@ Matrix convolucion (Matrix imagen, Matrix filtro)
                     ii = i + (m - mitad);
                     jj = j + (n - mitad);
 
-                    if (ii >= 0 && ii <  imagen.rows && jj >= 0 && jj <  imagen.cols) // validar limites de la imagen 00000
+                    if (ii >= offset && ii <  imagen.rows/threads + offset && jj >= offset && jj <  imagen.cols/threads + offset) // validar limites de la imagen 00000
                     {
-                        acumulador += image[ii][jj] * kernel[mm][nn];
+                        acumulador += imagen.get_value(ii, jj)* filtro.get_value(mm, nn);
                     }                        
                 }
             }
-            result[i][j] = acumulador;
+            resultado.set_value(i, j, acumulador);
         }
     }
 
-    for (int i = 0; i < result_matrix.cols; i++){ //Llenar Matrix para retornar
-        for (int j = 0; j < result_matrix.rows; j++){
-            result_matrix.set_value(i, j, result[i][j]); 
-        }
-    }            
+printf("\nResultado [%i]\n", hilo);
+resultado.print();
 
-    return result_matrix;
+
 }
 
 Matrix crear_matrix(){
