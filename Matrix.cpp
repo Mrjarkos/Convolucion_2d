@@ -29,8 +29,6 @@ int Matrix::get_value(int row, int col){
 
 void Matrix::print(){
 
-	std::cout << "\nMATRIX:" << std::endl;
-
 	for (int i = 0; i < cols; i++)
 	{
 		for (int j = 0; j < rows; j++)
