@@ -29,9 +29,9 @@ int Matrix::get_value(int row, int col){
 
 void Matrix::print(){
 
-	for (int i = 0; i < cols; i++)
+	for (int i = 0; i < this->cols; i++)
 	{
-		for (int j = 0; j < rows; j++)
+		for (int j = 0; j < this->rows; j++)
 		{
 			std::cout << data[j][i] << "\t"; 
 		}
@@ -65,7 +65,7 @@ int cont =1;
 	}
 }
 
-void  Matrix::full_in_matrix(int cont ){
+void  Matrix::full_in_matrix(int cont){
 	for (int i = 0; i < this->cols; i++)
 	{
 		for (int j = 0; j < this->rows; j++)
@@ -93,4 +93,5 @@ Matrix Matrix::sum_to(Matrix mat1){
 		std::cout << "ERROR 404: Dimensiones no adecuadas" << std::endl;
 		Matrix a = Matrix(0, 0);
 	return a;
+	}
 }
