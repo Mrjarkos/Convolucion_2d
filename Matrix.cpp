@@ -1,6 +1,8 @@
 #include "Matrix.h"
 
-
+Matrix::Matrix(){
+	Matrix(1,1);
+}
 
 Matrix::Matrix(int _rows, int _cols){
 	this->rows = _rows;
@@ -94,4 +96,44 @@ Matrix Matrix::sum_to(Matrix mat1){
 		Matrix a = Matrix(0, 0);
 	return a;
 	}
+}
+
+int Matrix::sum_elements(){
+	int suma = 0;
+
+		for (int i = 0; i < this->cols; i++)
+		{
+			for (int j = 0; j < this->rows; j++)
+			{
+				suma+= this->data[j][i];
+			}
+		}
+	return suma;
+}
+
+Matrix Matrix::copy(){
+
+	Matrix Copia = Matrix(this->rows, this->cols);
+
+	for (int i = 0; i < this->cols; i++)
+		{
+			for (int j = 0; j < this->rows; j++)
+			{
+				Copia.set_value(i,j, this->data[i][j]);
+			}
+		}
+
+	return Copia;	
+}
+
+Matrix Matrix::copy(Matrix Copia){
+
+	for (int i = 0; i < this->cols; i++)
+		{
+			for (int j = 0; j < this->rows; j++)
+			{
+				this->set_value(j,i, Copia.get_value(j,i));
+			}
+		}
+	return Copia;
 }

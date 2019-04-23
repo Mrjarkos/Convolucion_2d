@@ -34,25 +34,23 @@ typedef struct bmpInfoHeader
   uint32_t imxtcolors;      /* important colors */
 } bmpInfoHeader;
 
-void SaveBMP(char *filename, bmpInfoHeader *info, unsigned char *imgdata);
-unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader);
-bmpInfoHeader *createInfoHeader(unsigned w, unsigned h, unsigned ppp);
-
-Matrix convolucion (Matrix imagen, Matrix filtro, int hilos);
-
-void* Paralell_Proces(void *param);
-
-typedef struct {
+struct Param_Threads{
 	Matrix imagen;
 	Matrix filtro;
 	Matrix resultado;
 	int threads;
-	int offset;
-	int mitad;
-} Param_Threads;
-
+	int id;
+};
 
 int numThreads;
-Matrix crear_matrix();
 
 int main(int argc, char** argv);
+void SaveBMP(char *filename, bmpInfoHeader *info, unsigned char *imgdata);
+unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader);
+bmpInfoHeader *createInfoHeader(unsigned w, unsigned h, unsigned ppp);
+unsigned char calculaColorMedio(unsigned char *pixel);
+Matrix crear_matrix();
+Matrix convolucion (Matrix imagen, Matrix filtro, int hilos);
+void* Paralell_Proces(void *param);
+
+

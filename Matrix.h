@@ -13,6 +13,7 @@ class Matrix
 public:
 	int rows;
 	int cols;
+	Matrix();
 	Matrix(int, int);
 	int** get_data_pointer();
 	Matrix sum_to(Matrix);
@@ -22,6 +23,9 @@ public:
 	void set_value(int, int, int);
 	int get_value(int, int);
 	void print();
+	int sum_elements();
+	Matrix copy();
+	Matrix copy(Matrix Copia);
 };
 
 #endif

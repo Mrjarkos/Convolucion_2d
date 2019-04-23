@@ -1,7 +1,8 @@
 
 #include "main.h"
 
-#define archivo "/home/mrjarkos/Pictures/Panda.bmp"
+#define origen "./Imagen.bmp"
+#define destino "./ImagenConvolucionada.bmp"
 
 int main(int argc, char** argv) {
 
@@ -29,36 +30,22 @@ int main(int argc, char** argv) {
 
     t_ini1 = clock();
 
-    printf("Convolucion 2D\n");
+    printf("\nConvolucion 2D\n");
 
-/*    Filtro.set_value(1,1,4);
-    Filtro.set_value(1,2,4);
-    Filtro.set_value(1,3,4);
+    printf("\nAbriendo Imagen...\n");
+    img=LoadBMP(origen, &info);
 
-    Filtro.set_value(2,1,4);
-    Filtro.set_value(2,2,12);
-    Filtro.set_value(2,3,4);
-
-    Filtro.set_value(3,1,4);
-    Filtro.set_value(3,2,4);
-    Filtro.set_value(3,3,4);
-*/
-
-    printf("Abriendo Imagen...\n");
-    img=LoadBMP(archivo, &info);
-
-    printf("Creando Matrices RGB...\n");
+    printf("\nCreando Matrices RGB...\n");
     Matrix R = Matrix(info.height, info.width);
     Matrix G = Matrix(info.height, info.width);
     Matrix B = Matrix(info.height, info.width);
-    //R.full_in_matrix(100);
 
     printf("Copiando valores a RGB...\n");
      for (int i=0; i<info.height; i++)
        {
           for (int j=0; j<info.width; j++)
             {
-        //    Imagen.set_value(i, j, img[(j+i*info.width)]);
+                
             R.set_value(i, j, (int)img[3*(j+i*info.width)+2]);
             G.set_value(i, j, (int)img[3*(j+i*info.width)+1]);
             B.set_value(i, j, (int)img[3*(j+i*info.width)]);
@@ -66,29 +53,21 @@ int main(int argc, char** argv) {
     }
     
     printf("Listo...\n");
-    //printf("\nImagen:\n");
-   // Imagen.print();
 
     printf("\nFiltro:\n");
-    int n = 3;
+    int n = 5;
     Matrix Filtro = Matrix(n, n);
     Filtro.full_in_matrix(1);
+    Filtro.set_value(1,1,1);
     Filtro.print();
 
-
     t_ini2 = clock();
-    printf("Calculando Convolucion RGB\n");
+    printf("\nCalculando Convolucion RGB\n");
     R = convolucion(R, Filtro, numThreads);
     G = convolucion(G, Filtro, numThreads);
     B = convolucion(B, Filtro, numThreads);
-    //Matrix Resultado = convolucion(Imagen, Filtro, numThreads);
-    //printf("\nImagen Convolucionada:\n");
-    //Resultado.print();
-    //B = Matrix(info.height, info.width);
-    //R = Matrix(info.height, info.width);
-    //G = Matrix(info.height, info.width);
 
-    printf("Almacenando matriz Convolucionadau\n");
+    printf("Almacenando matriz Convolucionada\n");
      for (int i=0; i<info.height; i++)
        {
           for (int j=0; j<info.width; j++)
@@ -96,21 +75,10 @@ int main(int argc, char** argv) {
             img[3*(j+i*info.width)+2] = (unsigned char)R.get_value(i, j);
             img[3*(j+i*info.width)+1] = (unsigned char)G.get_value(i, j);
             img[3*(j+i*info.width)] = (unsigned char)B.get_value(i, j);
-      //      img[j+i*info.width] = Resultado.get_value(i, j);    
         }
     }
-    SaveBMP("/home/mrjarkos/Pictures/J.bmp", &info, img);
+    SaveBMP(destino, &info, img);
     delete(img);
-
-
-    printf("\nMatrix: \n");
-    Matrix matrix = Matrix(3,5);
-    matrix.full_in_matrix();
-    matrix.print();
-
-    printf("\nConvolucion \n");
-    matrix = convolucion(matrix, Filtro, numThreads);
-    matrix.print();
 
     t_fin = clock();
     printf("\nEjecucion con %i hilos", numThreads);
@@ -124,62 +92,32 @@ int main(int argc, char** argv) {
 
 Matrix convolucion (Matrix imagen, Matrix filtro, int numThreads)
 {   
-    int mitad, i,j,m,n,mm,nn,ii,jj, acumulador;
-
-    Matrix result_matrix = Matrix(imagen.rows, imagen.cols);
-
-    mitad = filtro.rows / 2;
-    /*pthread_t threads[numThreads];
+    int mitad, j,m,n,mm,nn,ii,jj, acumulador;
+    int sum = filtro.sum_elements();
+  
+    pthread_t threads[numThreads];
     pthread_attr_t attr[numThreads];
     Param_Threads data[numThreads];
 
     for(int i=0; i<numThreads; i++){
-        data[i].imagen = imagen;
-        data[i].filtro = filtro;
-        data[i].resultado = result_matrix;
+        data[i].imagen = Matrix(imagen.rows, imagen.cols);
+        data[i].imagen.copy(imagen);
+        data[i].filtro = Matrix(filtro.rows, filtro.cols);
+        data[i].filtro.copy(filtro);
+        data[i].resultado = Matrix(imagen.rows, imagen.cols);
         data[i].threads = numThreads;
-        data[i].offset = i;
-        data[i].mitad = mitad;
+        data[i].id = i;
         pthread_attr_init(&attr[i]);
         pthread_create(&threads[i], &attr[i], Paralell_Proces, &data[i]);
     }
 
+
+    Matrix resultado = Matrix(imagen.rows, imagen.cols);
     for(int i=0; i<numThreads; i++){
         pthread_join(threads[i], NULL);
-        result_matrix = data[i].resultado.sum_to(result_matrix);
+        resultado = data[i].resultado.sum_to(resultado);
     }
-*/
-int offset = 0;
-int threads = 1;
-
- for (i = offset; i < imagen.rows/threads + offset; ++i) // Filas
-    {
-        for (j = offset; j < imagen.cols/threads + offset; ++j) // Columnas
-        {
-            acumulador = 0; // Variable acumuladora
-            
-            for (m = 0; m < filtro.rows; ++m) // Filas del Kernel
-            {
-                mm = filtro.rows - 1 - m; // Indice de la fila del kernel alrevez
-
-                for (n = 0; n < filtro.cols; ++n) // Columnas del kernel
-                {
-                    nn = filtro.cols - 1 - n; // Indice de la columna del kernel alrevez
-                    
-                    ii = i + (m - mitad);
-                    jj = j + (n - mitad);
-
-                    if (ii >= offset && ii <  imagen.rows/threads + offset && jj >= offset && jj <  imagen.cols/threads + offset) // validar limites de la imagen 00000
-                    {
-                        acumulador += imagen.get_value(ii, jj)* filtro.get_value(mm, nn);
-                    }                        
-                }
-            }
-            result_matrix.set_value(i, j, acumulador);
-        }
-    }
-
-    return result_matrix;
+   return resultado;
 }
 
 void* Paralell_Proces(void *param){
@@ -188,42 +126,35 @@ void* Paralell_Proces(void *param){
     Matrix imagen = ((Param_Threads*)param)->imagen;
     Matrix filtro =  ((Param_Threads*)param)->filtro;
     Matrix resultado = ((Param_Threads*)param)->resultado;
+    mitad = filtro.rows / 2;
     int threads =  ((Param_Threads*)param)->threads;
-    int hilo = ((Param_Threads*)param)->offset;
-    int offset = imagen.rows/threads*hilo;
-    mitad = ((Param_Threads*)param)->mitad;
+    int id = ((Param_Threads*)param)->id;
+    int sum = filtro.sum_elements();
+    sum=sum==0?1:sum;
 
-    for (i = offset; i < imagen.rows/threads + offset ; ++i) // Filas
-    {
-        for (j = offset; j < imagen.cols/threads + offset; ++j) // Columnas
-        {
-            acumulador = 0; // Variable acumuladora
-            
-            for (m = 0; m < filtro.rows; ++m) // Filas del Kernel
-            {
-                mm = filtro.rows - 1 - m; // Indice de la fila del kernel alrevez
-
-                for (n = 0; n < filtro.cols; ++n) // Columnas del kernel
+    for (i = imagen.rows*(id/threads); i < imagen.rows*((id+1)/threads); ++i) // Filas
                 {
-                    nn = filtro.cols - 1 - n; // Indice de la columna del kernel alrevez
-                    
-                    ii = i + (m - mitad);
-                    jj = j + (n - mitad);
-
-                    if (ii >= offset && ii <  imagen.rows/threads + offset && jj >= offset && jj <  imagen.cols/threads + offset) // validar limites de la imagen 00000
+                    for (j = 0; j < imagen.cols; ++j) // Columnas
                     {
-                        acumulador += imagen.get_value(ii, jj)* filtro.get_value(mm, nn);
-                    }                        
+                    acumulador = 0; // Variable acumuladora
+                        for (m = 0; m < filtro.rows; ++m) // Filas del Kernel
+                        {
+                            mm = filtro.rows - 1 - m; // Indice de la fila del kernel alrevez
+                                for (n = 0; n < filtro.cols; ++n) // Columnas del kernel
+                                {
+                                    nn = filtro.cols - 1 - n; // Indice de la columna del kernel alrevez
+                                    ii = i + (m - mitad);
+                                    jj = j + (n - mitad);
+                                        if (ii >= imagen.rows*(id/threads) && ii <  imagen.rows*((id+1)/threads) && jj >= 0 && jj <  imagen.cols) // validar limites de la imagen 00000
+                                        {
+                                            acumulador += imagen.get_value(ii, jj)* filtro.get_value(mm, nn);
+                                        }                        
+                                }
+                        }
+                        resultado.set_value(i, j, acumulador/sum);
+                    }
                 }
-            }
-            resultado.set_value(i, j, acumulador);
-        }
-    }
-
-printf("\nResultado [%i]\n", hilo);
-resultado.print();
-
-
+    pthread_exit(0);
 }
 
 Matrix crear_matrix(){
@@ -254,6 +185,13 @@ Matrix crear_matrix(){
     return a;
 }
 
+unsigned char calculaColorMedio(unsigned char *pixel)
+{
+  unsigned media = (*pixel + *(pixel+1) + *(pixel+2)) / 3;
+
+  return (unsigned char) media;
+}
+
 unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader)
 {
 
@@ -262,7 +200,6 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader)
   unsigned char *imgdata;
   uint16_t type;
   f=fopen (filename, "r");
-  /* handle open error */
   fread(&type, sizeof(uint16_t), 1, f);
   if (type !=0x4D42)
     {
@@ -287,7 +224,7 @@ unsigned char *LoadBMP(char *filename, bmpInfoHeader *bInfoHeader)
   printf ("important colors: %d\n", bInfoHeader->imxtcolors);
   imgdata=(unsigned char*)malloc(bInfoHeader->imgsize);
   fseek(f, header.offset, SEEK_SET);
-  printf("leido: %d\n", fread(imgdata, bInfoHeader->imgsize,1, f));
+  printf("leido: %d\n", (int)fread(imgdata, bInfoHeader->imgsize,1, f));
   fclose(f);
 
   return imgdata;
@@ -320,18 +257,11 @@ void SaveBMP(char *filename, bmpInfoHeader *info, unsigned char *imgdata)
   
   f=fopen(filename, "w+");
   header.size=info->imgsize+sizeof(bmpFileHeader)+sizeof(bmpInfoHeader);
-  /* header.resv1=0; */
-  /* header.resv2=1; */
-  /* El offset será el tamaño de las dos cabeceras + 2 (información de fichero)*/
   header.offset=sizeof(bmpFileHeader)+sizeof(bmpInfoHeader)+2;
-  /* Escribimos la identificación del archivo */
   type=0x4D42;
   fwrite(&type, sizeof(type),1,f);
-  /* Escribimos la cabecera de fichero */
   fwrite(&header, sizeof(bmpFileHeader),1,f);
-  /* Escribimos la información básica de la imagen */
   fwrite(info, sizeof(bmpInfoHeader),1,f);
-  /* Escribimos la imagen */
   fwrite(imgdata, info->imgsize, 1, f);
   fclose(f);
 }
