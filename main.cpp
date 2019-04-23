@@ -10,7 +10,6 @@ int main(int argc, char** argv) {
     unsigned char *img;
     unsigned char color[3];
     unsigned char media;
-    
     clock_t t_ini1, t_ini2, t_fin;
     double secs;
 
@@ -29,7 +28,6 @@ int main(int argc, char** argv) {
     }
 
     t_ini1 = clock();
-
     printf("\nConvolucion 2D\n");
 
     printf("\nAbriendo Imagen...\n");
@@ -45,20 +43,29 @@ int main(int argc, char** argv) {
        {
           for (int j=0; j<info.width; j++)
             {
-                
             R.set_value(i, j, (int)img[3*(j+i*info.width)+2]);
             G.set_value(i, j, (int)img[3*(j+i*info.width)+1]);
             B.set_value(i, j, (int)img[3*(j+i*info.width)]);
         }
     }
-    
     printf("Listo...\n");
 
     printf("\nFiltro:\n");
-    int n = 5;
+    int n = 10;
     Matrix Filtro = Matrix(n, n);
     Filtro.full_in_matrix(1);
-    Filtro.set_value(1,1,1);
+    
+   // int filter[5][5] = {{-1,1,1,1,1},{-1,0,0,0,1},{-1,0,0,0,1},{-1,0,0,0,1},{-1,1,1,1,1}};
+
+/*
+    for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 5; j++)
+            {
+                Filtro.set_value(j,i, filter[i][j]);
+            }
+        }
+        */
     Filtro.print();
 
     t_ini2 = clock();
@@ -66,6 +73,13 @@ int main(int argc, char** argv) {
     R = convolucion(R, Filtro, numThreads);
     G = convolucion(G, Filtro, numThreads);
     B = convolucion(B, Filtro, numThreads);
+
+    t_fin = clock();
+    printf("\nEjecucion con %i hilos", numThreads);
+    secs = (double)(t_fin - t_ini1) / CLOCKS_PER_SEC;
+    printf("\nTotal Time Programm = %.16g milisegundos\n", secs * 1000.0/3);
+    secs = (double)(t_fin - t_ini2) / CLOCKS_PER_SEC;
+    printf("Total Time Convolution= %.16g milisegundos\n", secs * 1000.0/3);
 
     printf("Almacenando matriz Convolucionada\n");
      for (int i=0; i<info.height; i++)
@@ -79,38 +93,24 @@ int main(int argc, char** argv) {
     }
     SaveBMP(destino, &info, img);
     delete(img);
-
-    t_fin = clock();
-    printf("\nEjecucion con %i hilos", numThreads);
-    secs = (double)(t_fin - t_ini1) / CLOCKS_PER_SEC;
-    printf("\nTotal Time Programm = %.16g milisegundos\n", secs * 1000.0);
-    secs = (double)(t_fin - t_ini2) / CLOCKS_PER_SEC;
-    printf("Total Time Convolution= %.16g milisegundos\n", secs * 1000.0);
     return 0;
 }
 
-
 Matrix convolucion (Matrix imagen, Matrix filtro, int numThreads)
 {   
-    int mitad, j,m,n,mm,nn,ii,jj, acumulador;
-    int sum = filtro.sum_elements();
-  
     pthread_t threads[numThreads];
     pthread_attr_t attr[numThreads];
     Param_Threads data[numThreads];
 
     for(int i=0; i<numThreads; i++){
-        data[i].imagen = Matrix(imagen.rows, imagen.cols);
-        data[i].imagen.copy(imagen);
-        data[i].filtro = Matrix(filtro.rows, filtro.cols);
-        data[i].filtro.copy(filtro);
+        data[i].imagen = imagen;
+        data[i].filtro = filtro;
         data[i].resultado = Matrix(imagen.rows, imagen.cols);
         data[i].threads = numThreads;
         data[i].id = i;
         pthread_attr_init(&attr[i]);
         pthread_create(&threads[i], &attr[i], Paralell_Proces, &data[i]);
     }
-
 
     Matrix resultado = Matrix(imagen.rows, imagen.cols);
     for(int i=0; i<numThreads; i++){
@@ -132,8 +132,10 @@ void* Paralell_Proces(void *param){
     int sum = filtro.sum_elements();
     sum=sum==0?1:sum;
 
+    printf("Jajaja\n");
+
     for (i = imagen.rows*(id/threads); i < imagen.rows*((id+1)/threads); ++i) // Filas
-                {
+        {
                     for (j = 0; j < imagen.cols; ++j) // Columnas
                     {
                     acumulador = 0; // Variable acumuladora
@@ -153,7 +155,7 @@ void* Paralell_Proces(void *param){
                         }
                         resultado.set_value(i, j, acumulador/sum);
                     }
-                }
+        }
     pthread_exit(0);
 }
 
