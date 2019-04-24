@@ -10,8 +10,6 @@ int main(int argc, char** argv) {
     unsigned char *img;
     unsigned char color[3];
     unsigned char media;
-    //clock_t t_ini1, t_ini2, t_fin;
-    //double secs;
 
     if(argc==1){
        numThreads = 1;
@@ -27,7 +25,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    //t_ini1 = clock();
     printf("\nConvolucion 2D\n");
 
     printf("\nAbriendo Imagen...\n");
@@ -50,25 +47,16 @@ int main(int argc, char** argv) {
     }
     printf("Listo...\n");
 
-    //printf("\nFiltro:\n");
     int n = 20;
+    printf("\nFiltro orden: %i\n", n);
     Matrix Filtro = Matrix(n, n);
     Filtro.full_in_matrix(1);
-    Filtro.set_value((long int)1,(long int)1,1);
-    //Filtro.print();
+    Filtro.print();
 
-    //t_ini2 = clock();
     printf("\nCalculando Convolucion RGB\n");
     R = convolucion(R, Filtro, numThreads);
-    //G = convolucion(G, Filtro, numThreads);
-    //B = convolucion(B, Filtro, numThreads);
-
-   // t_fin = clock();
-   // printf("\nEjecucion con %i hilos", numThreads);
-   // secs = (double)(t_fin - t_ini1) / CLOCKS_PER_SEC;
-    //printf("\nTotal Time Programm = %.16g milisegundos\n", secs * 1000.0);
-    //secs = (double)(t_fin - t_ini2) / CLOCKS_PER_SEC;
-    //printf("Total Time Convolution= %.16g milisegundos\n", secs * 1000.0);
+    G = convolucion(G, Filtro, numThreads);
+    B = convolucion(B, Filtro, numThreads);
 
     printf("Almacenando matriz Convolucionada\n");
      for (int i=0; i<info.height; i++)
@@ -93,11 +81,6 @@ Matrix convolucion (Matrix imagen, Matrix filtro, int numThreads)
     clock_t t_ini1 = clock();
 
     for(int i=0; i<numThreads; i++){
-       /* data[i].imagen = Matrix(imagen.rows, imagen.cols);
-        data[i].imagen.copy(imagen);
-        data[i].filtro = Matrix(filtro.rows, filtro.cols);
-        data[i].filtro.copy(filtro);
-        */
         data[i].imagen = imagen.copy();
         data[i].filtro = filtro.copy();
         data[i].resultado = Matrix(imagen.rows, imagen.cols);
@@ -111,16 +94,14 @@ Matrix convolucion (Matrix imagen, Matrix filtro, int numThreads)
     Matrix resultado = Matrix(imagen.rows, imagen.cols);
     for(int i=0; i<numThreads; i++){
         pthread_join(threads[i], NULL);
-        
         resultado = data[i].resultado.sum_to(resultado);
-        
     }
    return resultado;
 }
 
 void* Paralell_Proces(void *param){
-
-    int mitad,j,m,n,mm,nn,ii,jj, acumulador;
+    int mitad,m,n,mm,nn, acumulador;
+    long int jj, j;
     Matrix imagen = ((Param_Threads*)param)->imagen;
     Matrix filtro =  ((Param_Threads*)param)->filtro;
     Matrix resultado = ((Param_Threads*)param)->resultado;
@@ -129,40 +110,30 @@ void* Paralell_Proces(void *param){
     int id = ((Param_Threads*)param)->id;
     int sum = filtro.sum_elements();
     sum=sum==0?1:sum;
-    //clock_t t_ini1 = ((Param_Threads*)param)->t_ini1, t_fin, t_ini2 = clock();
-    //double secs;
-    float i, x = (float)id/ (float)threads, x1 = ((float)id+(float)1 )/ (float)threads;
-    int iters = (float)imagen.rows*x1-(float)imagen.rows*x;
-   // printf("[%i]\t&imagen = %i\n",id, &imagen);
-    //printf("[%i]\timagen.rows = %i\tid = %i\tthreads = %i\tid/threads = %.4f\n", id, imagen.rows, id, threads, x);
-    //printf("[%i]\tlimites = %.1f < i < %.1f\titeraciones = %i\n",  id, (float)imagen.rows*x, (float)imagen.rows*x1, iters);
-    for (i = (float)imagen.rows*x; i < (float)imagen.rows*x1; i+=(float)1) // Filas
+    float i, ii, x = (float)id/ (float)threads, x1 = ((float)id+(float)1 )/ (float)threads;
+    
+    for (i = (float)imagen.rows*x; i < (float)imagen.rows*x1; i+=(float)1)
+    {
+        for (j = 0; j < imagen.cols; ++j)
         {
-                    for (j = 0; j < imagen.cols; ++j) // Columnas
+            acumulador = 0; 
+            for (m = 0; m < filtro.rows; ++m) 
+            {
+            mm = filtro.rows - 1 - m; 
+                for (n = 0; n < filtro.cols; ++n) 
+                {
+                nn = filtro.cols - 1 - n; 
+                ii = i + (m - mitad);
+                jj = j + (n - mitad);
+                    if ((ii>=(float)imagen.rows*x&&ii<(float)imagen.rows*x1)&&(jj>=0&&jj<imagen.cols))
                     {
-                    acumulador = 0; // Variable acumuladora
-                        for (m = 0; m < filtro.rows; ++m) // Filas del Kernel
-                        {
-                            mm = filtro.rows - 1 - m; // Indice de la fila del kernel alrevez
-                                for (n = 0; n < filtro.cols; ++n) // Columnas del kernel
-                                {
-                                    nn = filtro.cols - 1 - n; // Indice de la columna del kernel alrevez
-                                    ii = i + (m - mitad);
-                                    jj = j + (n - mitad);
-                                        if (ii >= imagen.rows*(id/threads) && ii <  imagen.rows*((id+1)/threads) && jj >= 0 && jj <  imagen.cols) // validar limites de la imagen 00000
-                                        {
-                                            acumulador += imagen.get_value(ii, jj)* filtro.get_value(mm, nn);
-                                        }                        
-                                }
-                        }
-                        resultado.set_value(i, j, acumulador/sum);
-                    }
+                        acumulador += imagen.get_value(ii, jj)* filtro.get_value(mm, nn);
+                    }                        
+                }
+            }
+        resultado.set_value(i, j, acumulador/sum);
         }
-    //t_fin=clock();
-   // secs = (double)(t_fin - t_ini1) / CLOCKS_PER_SEC;
-   // printf("[%i]\tTiempo que dure desde la creacion del primer hilo %.16g milisegundis\n", id, secs*1000.0);
-    //secs = (double)(t_fin - t_ini2) / CLOCKS_PER_SEC;
-    //printf("[%i]\tTiempo que dure desde mi creacion %.16g milisegund0s\n\n", id, secs*1000.0);
+    }
     pthread_exit(0);
 }
 

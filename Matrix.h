@@ -9,6 +9,7 @@
 
 class Matrix
 {
+private:
 	int** data;
 public:
 	long int rows;

@@ -68,10 +68,13 @@ int cont =1;
 }
 
 void  Matrix::full_in_matrix(int cont){
+	int col=0;
 	for (int i = 0; i < this->cols; i++)
 	{
 		for (int j = 0; j < this->rows; j++)
 		{
+			col++;
+			if(col%2)
 			this->data[j][i] = cont;
 		}
 	}
@@ -86,7 +89,7 @@ Matrix Matrix::sum_to(Matrix mat1){
 			{
 				for (int j = 0; j < rows; j++)
 				{
-		 			a.data[j][i] = data[j][i]+mat1.data[j][i];
+		 			a.set_value(j, i, mat1.get_value(j,i)+this->get_value(j,i));
 				}
 			}
 		return a;
