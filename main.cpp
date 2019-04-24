@@ -111,8 +111,12 @@ void* Paralell_Proces(void *param){
     int sum = filtro.sum_elements();
     sum=sum==0?1:sum;
     float i, ii, x = (float)id/ (float)threads, x1 = ((float)id+(float)1 )/ (float)threads;
-    
-    for (i = (float)imagen.rows*x; i < (float)imagen.rows*x1; i+=(float)1)
+    float offset, offset2;
+
+    offset = (float)imagen.rows*x1>=(float)imagen.rows?0:filtro.rows;
+    offset2 = (float)imagen.rows*x-filtro.rows>0?filtro.rows:0;
+   
+    for (i = (float)imagen.rows*x-offset2; i < (float)imagen.rows*x1+offset; i+=(float)1)
     {
         for (j = 0; j < imagen.cols; ++j)
         {
