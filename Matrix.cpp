@@ -4,7 +4,7 @@ Matrix::Matrix(){
 	Matrix(1,1);
 }
 
-Matrix::Matrix(int _rows, int _cols){
+Matrix::Matrix(long int _rows, long int _cols){
 	this->rows = _rows;
 	this->cols = _cols;
 
@@ -21,11 +21,11 @@ int** Matrix::get_data_pointer(){
 	return data;
 }
 
-void Matrix::set_value(int _row, int _col, int value){
+void Matrix::set_value(long int _row, long int _col, int value){
 	data[_row][_col] = value;
 }
 
-int Matrix::get_value(int row, int col){
+int Matrix::get_value(long int row, long int col){
 	return data[row][col];
 }
 
@@ -119,7 +119,7 @@ Matrix Matrix::copy(){
 		{
 			for (int j = 0; j < this->rows; j++)
 			{
-				Copia.set_value(i,j, this->data[i][j]);
+				Copia.set_value(j,i, this->data[j][i]);
 			}
 		}
 

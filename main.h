@@ -40,6 +40,7 @@ struct Param_Threads{
 	Matrix resultado;
 	int threads;
 	int id;
+	clock_t t_ini1;
 };
 
 int numThreads;
