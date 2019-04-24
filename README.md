@@ -429,7 +429,28 @@ Los resultados se observan mejor en la siguiente gráfica:
 
 <img src="Grafico.png" />
 
+A continuación se muestran algunas imágenes del uso de los diferentes hilos del procesadorconforme se ejecutaba el programa, así como la comparación de las imágenes antes y despues de la convolución:
+
+* Comparacion imagenes convolucionadas con 1 hilo:
+
+<img src="Comparacion.png" />
+
+* Procesamiento de la máquina:
+
+<img src="Procesador.png" />
+
+
 ## Conclusiones
+
+* Fue necesario realizar el SpeedUp con una imagen bastante grande debido que cuando se tenía una gran cantidad de datos de procesamiento era cuando se notaba la diferencia en cuanto al Speed Up del programa según los hilos. En el caso de una imagen muy pequeña, o de un filtro de un orden inferior, no se notaba la diferencia de implementar el programa con 1 hilo o con múltiples hilos. Esto nos lleva a concluir que, es necesario evaluar la situación al paralelizar un programa debido a que en ocasiones no es necesario. Cuando se tienen pocos datos o cuando no se requiere procesar una gran cantidad de datos, no es viable implementar la paralelización de datos.
+
+* Con base en los resultados obtenidos se puede intuir que el tiempo de procesamiento de información no es inversamente proporcional al número de hilos que se emplean para ejecutar dicho proceso, en vez de ello entre más tiendan los hilos a valores grandes, se presenta como un tipo de asintota. En síntesis, a mayor cantidad de hilos no necesariamente se ejecuta un proceso en tiempo casi nulo.
+
+* Al tener una cantidas exagerada de hilos se pierde tiene un speed up menor al esperado debido a que el crear una cierta cantidad de hilos tambien se refleja en tiempo de ejcución del programa, es decir  que la creacion de hilos gasta tiempo  que no se tiene en cuenta a la hora de hacer el speed up teórico.
+
+* El speed up fue `lineal` (se comportó según la teoría) hasta 4 hilos que es el número de núcleos físicos de la máquina, tal como se esperó. El speed Up aumentó sutilmente hasta 8 hilos que es el número de núcleos virtuales de la máquina. De este número hasta 16 hilos, no hubo mayor cambio. De lo anterior se puede concluir que una mayor cantidad de hilos no necesariamente implica una mayor velocidad de procesamiento, estos parámetros dependen del programa, de los datos a procesar, de la máquina en la que se ejecutará el programa, entre otros.
+
+* Se tuvo problemas al procesar la imagen, debido a que cada hilo accedía directamente a la imagen al mismo tiempo, por ello fue necesario recurrir a implementar una copia para cada hilo con el fin de evitar este problema. Este problema se pudo haber solucionado implementando sincronización de hilos.
 
 ## Referencias
 
